@@ -33,11 +33,11 @@ opts = {
   :account_num => api_accnt_num,
   :date => Time.now,
   :weight => 1, # weight in lbs
-  :street => '1533-1 Ooka',
-  :city => 'Numazu City',
-  :zip => '410-0022',
-  :state => 'Shizuoka',
-  :country => 'JP',
+  :to_street => '1533-1 Ooka',
+  :to_city => 'Numazu City',
+  :to_zip => '410-0022',
+  :to_state => 'Shizuoka',
+  :to_country => 'JP',
   :international => true
 }
 

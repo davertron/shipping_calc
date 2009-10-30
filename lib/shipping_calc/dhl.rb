@@ -41,21 +41,25 @@ module ShippingCalc
     # :*api_user*:: API access username, provided by DHL.
     # :*api_password*:: API access password, provided by DHL.
     # :*shipping_key*:: API shipping key, provided by DHL.
+    # :*international_shipping_key*:: API shipping key, provided by DHL, used
+      # for international quotes.
     # :*account_num*:: Account number, provided by DHL.
     # :*date*:: Date for the shipping in format YYYY-MM-DD (defaults to Time.now).
     # :*service_code*:: Service code defined in Rate Estimate Specification(E, N, S, G). 1030 and SAT are not supported yet. Defaults to G (ground service).
     # :*shipment_code*:: ShipmentType code defined in the Rate Estimate Specification. "P" for Package or "L" for Letter. Defaults to "P".
     # :*weight*:: Order's weight. If the shipment code is a "L" (letter) then the weight will be 0.
+    # :*to_street*:: Recipient's street
     # :*to_zip*:: Recipient's zip code.
-    # :*to_country*:: Recipient's country. Not used, currently DHL only supports US.
+    # :*to_country*:: Recipient's country.
     # :*to_state*:: Recipient's state.
+    # :*international*:: Whether or not the quote is international or not
 
     def quote(params)
       @international = params[:international]
       @xml = Document.new
       @xml << XMLDecl.new("1.0' encoding='UTF-8")
       raise ShippingCalcError.new("Invalid parameters") if params.nil?
-      #raise ShippingCalcError.new("Missing shipping parameters") unless params.keys.length == 10
+      raise ShippingCalcError.new("Missing shipping parameters") unless params.keys.length >= 10
       auth(params[:api_user], params[:api_password])
       rate_estimate(params)
       request
@@ -101,9 +105,11 @@ module ShippingCalc
     #     Specification. "P" for Package or "L" for Letter. Defaults to "P".
     #     weight: Order's weight. If the shipment code is a "L" (letter) then
     #     the weight will be 0.
+    #     to_street: Recipient's street address.
     #     to_zip: Recipient's zip code.
     #     to_country: Recipient's country. Not used, currently DHL only supports US.
     #     to_state: Recipient's state.
+    #     international: Whether you're getting an international quote or not
     def rate_estimate(params)
       if @international
         shipment = Element.new 'IntlShipment'
@@ -171,19 +177,19 @@ module ShippingCalc
         receiver = Element.new 'Receiver'
         address = Element.new 'Address'
         street = Element.new 'Street'
-        street.text = params[:street]
+        street.text = params[:to_street]
         address << street
         city = Element.new 'City'
-        city.text = params[:city]
+        city.text = params[:to_city]
         address << city
         state = Element.new 'State'
-        state.text = params[:state]
+        state.text = params[:to_state]
         address << state
         country = Element.new 'Country'
-        country.text = params[:country]
+        country.text = params[:to_country]
         address << country
         postal_code = Element.new 'PostalCode'
-        postal_code.text = params[:zip]
+        postal_code.text = params[:to_zip]
         address << postal_code
         receiver << address
 
