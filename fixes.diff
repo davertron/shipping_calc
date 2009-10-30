@@ -1,0 +1,358 @@
+diff --git a/examples/dhl_example.rb b/examples/dhl_example.rb
+index 544c2d5..bdde269 100644
+--- a/examples/dhl_example.rb
++++ b/examples/dhl_example.rb
+@@ -1,5 +1,5 @@
+ require 'rubygems'
+-require 'shipping_calc'
++require File.dirname(__FILE__) + '/../lib/shipping_calc'
+ require 'yaml'
+ require 'rbconfig'
+ include ShippingCalc
+diff --git a/lib/shipping_calc/dhl.rb b/lib/shipping_calc/dhl.rb
+index c1f57bf..cbca6d3 100644
+--- a/lib/shipping_calc/dhl.rb
++++ b/lib/shipping_calc/dhl.rb
+@@ -51,10 +51,11 @@ module ShippingCalc
+     # :*to_state*:: Recipient's state.
+ 
+     def quote(params)
++      @international = params[:international]
+       @xml = Document.new
+       @xml << XMLDecl.new("1.0' encoding='UTF-8")
+       raise ShippingCalcError.new("Invalid parameters") if params.nil?
+-      raise ShippingCalcError.new("Missing shipping parameters") unless params.keys.length == 10
++      #raise ShippingCalcError.new("Missing shipping parameters") unless params.keys.length == 10
+       auth(params[:api_user], params[:api_password])
+       rate_estimate(params)
+       request
+@@ -104,105 +105,189 @@ module ShippingCalc
+     #     to_country: Recipient's country. Not used, currently DHL only supports US.
+     #     to_state: Recipient's state.
+     def rate_estimate(params)
+-
+-      # <Shipment action="RateEstimate" version="1.0">
+-      shipment = Element.new "Shipment"
+-      shipment.attributes["action"] = "RateEstimate"
+-      shipment.attributes["version"] = "1.0"
+-
+-      # <ShippingCredentials>
+-      #   <ShippingKey>key</ShippingKey> 
+-      #   <AccountNbr>number</AccountNbr>
+-      # </ShippingCredentials>
+-      credentials = Element.new "ShippingCredentials"
+-
+-      key = Element.new "ShippingKey"
+-      key.text = params[:shipping_key] 
+-      account = Element.new "AccountNbr"
+-      account.text = params[:account_num] 
+-
+-      credentials << key
+-      credentials << account
+-      shipment << credentials
+-
+-      # <ShipmentDetail>
+-      #   <ShiptDate>date</ShipDate>
+-      shipment_detail = Element.new "ShipmentDetail"
+-      ship_date = Element.new "ShipDate"   
+-      ship_date.text = date(params[:date])
+-      shipment_detail << ship_date
+-
+-      # TODO: Implement SAT and 1030 services
+-
+-      #   <Service>
+-      #     <Code>code</Code>
+-      #   </Service>
+-      service = Element.new "Service"
+-      service_code = Element.new "Code"
+-      service_code.text = service_code(params[:service_code])
+-      service << service_code
+-
+-      shipment_detail << service
+-
+-      #   <ShipmentType>
+-      #     <Code>code</Code>
+-      #   </ShipmentType>
+-      shipment_type = Element.new "ShipmentType"
+-      shipment_type_code = Element.new "Code"
+-      shipment_type_code.text = shipment_code(params[:shipment_code])
+-      shipment_type << shipment_type_code
+-      shipment_detail << shipment_type
+-
+-      #   <Weight>weight</Weight>
+-      weight = Element.new "Weight"
+-      weight.text = weight(params[:weight], params[:shipment_code])
+-
+-      # </ShipmentDetail>      
+-      shipment_detail << weight
+-
+-      shipment << shipment_detail
+-
+-      # <Billing>
+-      #   <Party>
+-      #     <Code>S</Code>
+-      #   </Party>
+-      # </Billing>
+-      billing = Element.new "Billing"
+-      billing_party = Element.new "Party"
+-      billing_party_code = Element.new "Code"
+-
+-      # Since we're just doing some quick calulations we don't want to be
+-      # worrying about who's gonna send the package. Just make the calulations 
+-      # assuming the sender pays for the shipping.
+-      billing_party_code.text = "S"
+-
+-      billing << billing_party << billing_party_code
+-
+-      shipment << billing
+-
+-      # <Receiver>
+-      #   <Address>
+-      #     <State>state</State>
+-      #     <Country>country</Country>
+-      #     <PostalCode>code</PostalCode>
+-      #   </Address>
+-      # </Receiver>
+-      receiver = Element.new "Receiver"
+-      receiver_addr = Element.new "Address"
+-      receiver_state = Element.new "State"
+-      receiver_country = Element.new "Country"
+-      receiver_zipcode = Element.new "PostalCode"
+-
+-      receiver_state.text = state(params[:to_state])
+-      receiver_country.text = "US"
+-      receiver_zipcode.text = zip_code(params[:to_zip])
+-
+-      receiver_addr << receiver_state
+-      receiver_addr << receiver_country
+-      receiver_addr << receiver_zipcode
+-      receiver << receiver_addr
+-
+-      shipment << receiver
++      if @international
++        shipment = Element.new 'IntlShipment'
++        shipment.attributes['action'] = 'RateEstimate'
++        shipment.attributes['version'] = '1.0'
++        
++        credentials = Element.new 'ShippingCredentials'
++        key = Element.new 'ShippingKey'
++        key.text = params[:international_shipping_key]
++        account = Element.new 'AccountNbr'
++        account.text = params[:account_num]
++
++        credentials << key
++        credentials << account
++        shipment << credentials
++
++        shipment_details = Element.new 'ShipmentDetail'
++        ship_date = Element.new 'ShipDate'
++        ship_date.text = date(params[:date])
++        shipment_details << ship_date
++
++        service = Element.new 'Service'
++        service_code = Element.new 'Code'
++        service_code.text = 'IE'
++        service << service_code
++        shipment_details << service
++
++        shipment_type = Element.new 'ShipmentType'
++        type_code = Element.new 'Code'
++        type_code.text = 'O'
++        shipment_type << type_code
++        shipment_details << shipment_type
++
++        weight = Element.new 'Weight'
++        weight.text = weight(params[:weight], 'P')
++        shipment_details << weight
++
++        content_description = Element.new 'ContentDesc'
++        content_description.text = 'Computer Parts'
++        shipment_details << content_description
++
++        shipment << shipment_details
++
++        dutiable = Element.new 'Dutiable'
++        dutiable_flag = Element.new 'DutiableFlag'
++        dutiable_flag.text = 'Y'
++        dutiable << dutiable_flag
++
++        customs_value = Element.new 'CustomsValue'
++        customs_value.text = '100'
++        dutiable << customs_value
++        shipment << dutiable
++
++        billing = Element.new 'Billing'
++        party = Element.new 'Party'
++        party_code = Element.new 'Code'
++        party_code.text = 'S'
++        party << party_code
++        billing << party
++        duty_payment_type = Element.new 'DutyPaymentType'
++        duty_payment_type.text = 'S'
++        billing << duty_payment_type
++        shipment << billing
++
++        receiver = Element.new 'Receiver'
++        address = Element.new 'Address'
++        street = Element.new 'Street'
++        street.text = params[:street]
++        address << street
++        city = Element.new 'City'
++        city.text = params[:city]
++        address << city
++        state = Element.new 'State'
++        state.text = params[:state]
++        address << state
++        country = Element.new 'Country'
++        country.text = params[:country]
++        address << country
++        postal_code = Element.new 'PostalCode'
++        postal_code.text = params[:zip]
++        address << postal_code
++        receiver << address
++
++        shipment << receiver
++      else
++        # <Shipment action="RateEstimate" version="1.0">
++        shipment = Element.new "Shipment"
++        shipment.attributes["action"] = "RateEstimate"
++        shipment.attributes["version"] = "1.0"
++
++        # <ShippingCredentials>
++        #   <ShippingKey>key</ShippingKey> 
++        #   <AccountNbr>number</AccountNbr>
++        # </ShippingCredentials>
++        credentials = Element.new "ShippingCredentials"
++
++        key = Element.new "ShippingKey"
++        key.text = params[:shipping_key] 
++        account = Element.new "AccountNbr"
++        account.text = params[:account_num] 
++
++        credentials << key
++        credentials << account
++        shipment << credentials
++
++        # <ShipmentDetail>
++        #   <ShiptDate>date</ShipDate>
++        shipment_detail = Element.new "ShipmentDetail"
++        ship_date = Element.new "ShipDate"   
++        ship_date.text = date(params[:date])
++        shipment_detail << ship_date
++
++        # TODO: Implement SAT and 1030 services
++
++        #   <Service>
++        #     <Code>code</Code>
++        #   </Service>
++        service = Element.new "Service"
++        service_code = Element.new "Code"
++        service_code.text = service_code(params[:service_code])
++        service << service_code
++
++        shipment_detail << service
++
++        #   <ShipmentType>
++        #     <Code>code</Code>
++        #   </ShipmentType>
++        shipment_type = Element.new "ShipmentType"
++        shipment_type_code = Element.new "Code"
++        shipment_type_code.text = shipment_code(params[:shipment_code])
++        shipment_type << shipment_type_code
++        shipment_detail << shipment_type
++
++        #   <Weight>weight</Weight>
++        weight = Element.new "Weight"
++        weight.text = weight(params[:weight], params[:shipment_code])
++
++        # </ShipmentDetail>      
++        shipment_detail << weight
++
++        shipment << shipment_detail
++
++        # <Billing>
++        #   <Party>
++        #     <Code>S</Code>
++        #   </Party>
++        # </Billing>
++        billing = Element.new "Billing"
++        billing_party = Element.new "Party"
++        billing_party_code = Element.new "Code"
++
++        # Since we're just doing some quick calulations we don't want to be
++        # worrying about who's gonna send the package. Just make the calulations 
++        # assuming the sender pays for the shipping.
++        billing_party_code.text = "S"
++
++        billing << billing_party << billing_party_code
++
++        shipment << billing
++
++        # <Receiver>
++        #   <Address>
++        #     <State>state</State>
++        #     <Country>country</Country>
++        #     <PostalCode>code</PostalCode>
++        #   </Address>
++        # </Receiver>
++        receiver = Element.new "Receiver"
++        receiver_addr = Element.new "Address"
++        receiver_state = Element.new "State"
++        receiver_country = Element.new "Country"
++        receiver_zipcode = Element.new "PostalCode"
++
++        receiver_state.text = state(params[:to_state])
++        receiver_country.text = "US"
++        receiver_zipcode.text = zip_code(params[:to_zip])
++
++        receiver_addr << receiver_state
++        receiver_addr << receiver_country
++        receiver_addr << receiver_zipcode
++        receiver << receiver_addr
++
++        shipment << receiver
++      end
+ 
+       root = @xml.elements["eCommerce"]
+       root.add shipment
+@@ -210,11 +295,16 @@ module ShippingCalc
+ 
+     # Sends the request to the web server and returns the response.
+     def request
+-      server = Net::HTTP.new("eCommerce.airborne.com", 443)
+-      path = "/ApiLandingTest.asp"
++      #server = Net::HTTP.new("eCommerce.airborne.com", 443)
++      server = Net::HTTP.new("eCommerce.airborne.com", 80)
++      #path = "/ApiLandingTest.asp"
++      path = "/ApiLanding.asp"
+       data = @xml.to_s
++      File.open('/home/david/Desktop/dhl_intl.xml', 'w') do |f|
++        f.puts data
++      end
+       headers = { "Content-Type" => "text/xml"}
+-      server.use_ssl = true
++      #server.use_ssl = true
+       resp = server.post(path, data, headers)
+       price = parse_response(resp.body)
+     end
+@@ -226,10 +316,18 @@ module ShippingCalc
+ 
+       find_error_and_raise(doc) if errors_exist?(doc)
+ 
+-      result =  doc.elements["//Shipment/Result/Desc"].text 
++      if @international
++        result =  doc.elements["//IntlShipment/Result/Desc"].text 
++      else
++        result =  doc.elements["//Shipment/Result/Desc"].text 
++      end
+       
+       if result == "Shipment estimate successful."
+-        doc.elements["//Shipment/EstimateDetail/RateEstimate/TotalChargeEstimate"].text.to_f
++        if @international
++          doc.elements["//IntlShipment/EstimateDetail/RateEstimate/TotalChargeEstimate"].text.to_f
++        else
++          doc.elements["//Shipment/EstimateDetail/RateEstimate/TotalChargeEstimate"].text.to_f
++        end
+       else
+         raise ShippingCalcError.new(doc.to_s)
+       end
