@@ -25,22 +25,6 @@ api_key = auth_info["shipping_key"]
 intl_api_key = auth_info["international_shipping_key"]
 api_accnt_num = auth_info["account_num"]
 
-#opts = { 
-#  :api_user => api_user,
-#  :api_password => api_pwd,
-#  :shipping_key => api_key,
-#  :international_shipping_key => intl_api_key,
-#  :account_num => api_accnt_num,
-#  :date => Time.now,
-#  :weight => 1, # weight in lbs
-#  :street => '1533-1 Ooka',
-#  :city => 'Numazu City',
-#  :zip => '410-0022',
-#  :state => 'Shizuoka',
-#  :country => 'JP',
-#  :international => true
-#}
-
 opts = { 
   :api_user => api_user,
   :api_password => api_pwd,
@@ -49,8 +33,12 @@ opts = {
   :account_num => api_accnt_num,
   :date => Time.now,
   :weight => 1, # weight in lbs
-  :to_zip => 10001,
-  :to_state => 'NY'
+  :street => '1533-1 Ooka',
+  :city => 'Numazu City',
+  :zip => '410-0022',
+  :state => 'Shizuoka',
+  :country => 'JP',
+  :international => true
 }
 
 d = DHL.new
