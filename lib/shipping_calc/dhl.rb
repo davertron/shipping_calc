@@ -133,13 +133,13 @@ module ShippingCalc
 
         service = Element.new 'Service'
         service_code = Element.new 'Code'
-        service_code.text = 'IE'
+        service_code.text = service_code(params[:service_code])
         service << service_code
         shipment_details << service
 
         shipment_type = Element.new 'ShipmentType'
         type_code = Element.new 'Code'
-        type_code.text = 'O'
+        type_code.text = shipment_code(params[:shipment_code])
         shipment_type << type_code
         shipment_details << shipment_type
 
@@ -385,23 +385,23 @@ module ShippingCalc
     end
 
     def shipment_code(code)
-      ["P", "L"].include?(code) ? code : "P"
+      ['P', 'L', 'O'].include?(code) ? code : 'P'
     end
 
     def service_code(code)
-      ["E", "N", "S", "G"].include?(code) ? code : "G"
+      ['E', 'N', 'S', 'G', 'IE'].include?(code) ? code : 'G'
     end
 
     def weight(w, type)
-      if type == "L"
-        "0"
+      if type == 'L'
+        '0'
       else
-        (w > 0 && w <= 150) ? w.to_s : (raise ShippingCalcError.new("Invalid weight - Must be between 1 and 150 lbs."))
+        (w > 0 && w <= 150) ? w.to_s : (raise ShippingCalcError.new('Invalid weight - Must be between 1 and 150 lbs.'))
       end
     end
 
     def state(s)
-      valid_state?(s) ? s : (raise ShippingCalcError.new("Invalid state for recipient"))
+      valid_state?(s) ? s : (raise ShippingCalcError.new('Invalid state for recipient'))
     end
 
     def valid_state?(s)
@@ -410,9 +410,9 @@ module ShippingCalc
 
     def zip_code(code)
       if code.class != Fixnum
-        raise ShippingCalcError.new("Zip Code must be a number. Perhaps you are using a string?")
+        raise ShippingCalcError.new('Zip Code must be a number. Perhaps you are using a string?')
       end
-      code.to_s =~ /\d{5}/ ? code.to_s : (raise ShippingCalcError.new("Invalid zip code for recipient"))
+      code.to_s =~ /\d{5}/ ? code.to_s : (raise ShippingCalcError.new('Invalid zip code for recipient'))
     end
 
   end
