@@ -23,6 +23,7 @@ $:.unshift(File.dirname(__FILE__))
 
 require 'rubygems'
 require File.dirname(__FILE__) + "/shipping_calc/dhl"
+require File.dirname(__FILE__) + "/shipping_calc/ups"
 require File.dirname(__FILE__) + "/shipping_calc/freight_quote"
 module ShippingCalc
 
