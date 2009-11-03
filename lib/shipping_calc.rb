@@ -27,7 +27,7 @@ require File.dirname(__FILE__) + "/shipping_calc/ups"
 require File.dirname(__FILE__) + "/shipping_calc/freight_quote"
 module ShippingCalc
 
-  VERSION = "0.1.7" 
+  VERSION = "0.2.0" 
 
   US_STATES =  ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC',
                'DE', 'FL', 'GA', 'HI', 'IA', 'ID', 'IL', 'IN',
@@ -40,5 +40,4 @@ module ShippingCalc
 
   class ShippingCalcError < StandardError
   end
-
 end
