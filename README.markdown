@@ -1,8 +1,8 @@
 ShippingCalc
 ============
 
-* http://github.com/febuiles/shipping_calc/
-* mailto:federico.builes@gmail.com
+* http://github.com/davertron/shipping_calc/
+* mailto:davertron@gmail.com
 
 DESCRIPTION:
 -----------
@@ -73,7 +73,7 @@ information in to the UPS/DHL/Freight classes in any fashion you like.
 
 LICENSE:
 -------
-Copyright (c) 2008 Federico Builes
+Copyright (c) 2009 David Davis
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
