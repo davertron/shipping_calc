@@ -7,12 +7,12 @@ ShippingCalc
 DESCRIPTION:
 -----------
 
-Shipping Calculator written in Ruby to get quick quotes from DHL and Freight Carriers.
-We hope to support FedEx and UPS in a near future.	
+Shipping Calculator written in Ruby to get quick quotes from DHL, UPS and Freight Carriers.
+We hope to support FedEx in the near future.	
 
 FEATURES/PROBLEMS:
 -----------------
-- Current version only supports DHL and FreightQuote
+- Current version does not support FedEx
 
 SYNOPSIS:
 --------
@@ -60,8 +60,16 @@ To run the DHL tests you'll need to have a .dhl_info.yml file in your home direc
     shipping_key: your_key
     account_num: your_accnt_num
 
-This is necessary only for the tests and it'll be ignored for the actual
-usage of the the library. 
+To run the UPS tests, you will need a similar setup, with a.ups_info.yml in
+your home directory with info like this:
+    ~/.ups_info.yml
+    
+    api_user: your_user
+    api_password: your_password
+    shipping_key: your_key
+
+This is necessary only for the tests. When using the library, you can pass this
+information in to the UPS/DHL/Freight classes in any fashion you like.
 
 LICENSE:
 -------
