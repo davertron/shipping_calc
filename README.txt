@@ -58,7 +58,7 @@ To run the DHL tests you'll need to have a .dhl_info.yml file in your home direc
     shipping_key: your_key
     account_num: your_accnt_num
 
-To run the UPS tests, you will need a similar setup, with a.ups_info.yml in
+To run the UPS tests, you will need a similar setup, with a .ups_info.yml in
 your home directory with info like this:
     ~/.ups_info.yml
     
