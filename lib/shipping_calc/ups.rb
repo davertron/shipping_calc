@@ -19,10 +19,10 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'rubygems'
 require 'rexml/document'
 require 'net/http'
-require 'net/https'
-require 'uri'
+require 'hpricot'
 include REXML
 
 module ShippingCalc
@@ -56,6 +56,7 @@ module ShippingCalc
     # Use this to see the xml request you're sending and the xml response
     # you're receiving
     def set_debug(request_path, response_path)
+        @debug = true
         @debug_request_path = request_path
         @debug_response_path = response_path
     end
@@ -237,30 +238,31 @@ module ShippingCalc
 
     # Parses the server's response.
     def parse_response(resp)
-      doc = Document.new(resp)
+      doc = Hpricot(resp)
 
       find_error_and_raise(doc) if errors_exist?(doc)
 
       codes = []
-      doc.elements.each('//Service/Code') do |ele|
-          codes << SERVICE_CODES[ele.text]
+      doc.search('//ratedshipment/service/code') do |ele|
+          codes << SERVICE_CODES[ele.innerHTML]
       end
       costs = []
-      doc.elements.each('//TotalCharges/MonetaryValue') do |ele|
-          costs << ele.text
+      doc.search('//ratedshipment/totalcharges/monetaryValue') do |ele|
+          costs << ele.innerHTML
       end
 
       quotes = codes.zip costs
     end
 
     def errors_exist?(response)
-      not response.elements['//ResponseStatusCode'].text.to_i == 1
+      not response.search('//responsestatuscode').innerHTML.to_i == 1
     end
 
     def find_error_and_raise(response)
-      error_code = response.elements['//ErrorCode']
-      error_description = response.elements['//ErrorDescription']
-      raise ShippingCalcError.new("UPS Error #{error_code.text.to_s}: #{error_description.text.to_s}")
+      error_code = response.search('//errorcode')
+      error_description = response.search('//errordescription')
+      raise ShippingCalcError.new("UPS Error #{error_code.innerHTML.to_s}:
+                                  #{error_description.innerHTML.to_s}")
     end
 
     def date(date)
